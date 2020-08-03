@@ -6,11 +6,10 @@ Ready state of 4 means that a operation has been completed, 0 would the method h
 
 /*Callback Functions - everything is made of objects, a function is also an object and can be passed as a argument to another function. A callback is a function passed as a parameter to another function
 and executed inside that function.*/ 
-const baseURL = "https://ci-swapi.herokuapp.com/api/"
-function getData(type, cb){
+function getData(url, cb){
     
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", baseURL + type + "/"); /* 1st argument: GET retreives data from the server, alternately could use POST to send data to the server
+    xhr.open("GET", url); /* 1st argument: GET retreives data from the server, alternately could use POST to send data to the server
                                                            2nd arguement is the URL we want to retreive data from/post too*/
     xhr.send();/*Sends the request*/
     /*this.status represents http status code, 200 is request succeeded. Another example of a status code is 301,401, 404 and numerous other error codes*/
@@ -31,11 +30,27 @@ function getTableHeaders(obj){
     return '<tr>' + tableHeaders + '</tr>'
 }
 
-function writeToDocument(type){
+function generatePaginationButtons(next, prev){
+    if (next && prev) {
+        return `<button onclick="writeToDocument('${prev}')">Previous</button>
+                <button onclick="writeToDocument('${next}')">Next</button>`;
+    } else if (next && !prev) {
+        return `<button onclick="writeToDocument('${next}')">Next</button>`;
+    } else if (!next && prev) {
+        return `<button onclick="writeToDocument('${prev}')">Previous</button>`;
+    }
+}
+
+
+function writeToDocument(url){
     
     var el = document.getElementById("data");
     el.innerHTML="";
-    getData(type,function(data){
+    getData(url,function(data){
+        var pagination;
+        if(data.next || data.previous){
+            pagination = generatePaginationButtons(data.next, data.previous);
+        }
         var tableRows = []; //set data in a table to make it easier to display
         data = data.results; /*console.dir(data) used to show the format of data in the object and it found an array called results, which contains an array of 10 items */
         var tableHeaders = getTableHeaders(data[0]);
@@ -49,7 +64,7 @@ function writeToDocument(type){
             tableRows.push("<tr>" + dataRow + "</tr>");
         });
 
-        el.innerHTML = '<table>' + tableHeaders + tableRows + '</table>';
+        el.innerHTML = '<table>' + tableHeaders + tableRows + '</table>' + pagination;
         /*change inner html to responeText taken from our xhr object*/
     });
 }
